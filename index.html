@@ -19,9 +19,10 @@
     .instructions {
     width: var(--stage-w);
     margin-top: 10px;
-    font-size: 12px;
+    font-size: 14px;
     color: #9ec1ff;
     text-align: center;
+      footer{margin-top:18px;text-align:center;color:#6b7280;font-size:12px;} /* font-size 추가 */
   }
   .kbd {
     padding: 2px 6px;
@@ -148,26 +149,21 @@
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(assets.background, 0, 0, canvas.width, canvas.height);
     
+    // NPC 그리기
+    const npcImage = (NPC.state === 'fallen') ? assets.npc_fallen : assets.npc_walking;
+    ctx.drawImage(npcImage, NPC.x, NPC.y, NPC.w, NPC.h);
+    
     // ✨ FIX: 플레이어 이미지 선택 로직 수정
     let playerImage;
-    if (gameState === 'STAGE3_CPR') {
+    if (gameState === 'STAGE2_CPR') {
         playerImage = assets.player_cpr;
-        PL.x = NPC.x - PL.w + 30; PL.y = NPC.y - 10;
+        PL.x = NPC.x - PL.w + 30;
+        PL.y = NPC.y - 10;
     } else {
-        if (PL.state === 'walk') {
-            playerImage = (PL.walkFrame === 0) ? assets.player_walk_1 : assets.player_walk_2;
-        } else { // 'idle' 상태일 때 그릴 이미지를 명시
-            playerImage = assets.player_idle;
-        }
+        // 'walk' 상태일 때는 걷는 이미지, 아닐 때는('idle') 서 있는 이미지
+        playerImage = (PL.state === 'walk') ? assets.player_walk : assets.player_idle;
     }
     drawSprite(playerImage, PL.x, PL.y, PL.w, PL.h, PL.facing === -1);
-
-    // ✨ FIX: NPC를 나중에 그려서 느낌표가 플레이어 위에 오도록 수정
-    let npcImage = (NPC.state === 'fallen') ? assets.npc_fallen : assets.npc_walking;
-    if (gameState === 'STAGE3_CPR' || gameState === 'STAGE4_AED' || gameState === 'SUCCESS') {
-        npcImage = assets.npc_walking;
-    }
-    ctx.drawImage(npcImage, NPC.x, NPC.y, NPC.w, NPC.h);
 
     // 나머지 UI 그리기
     if (NPC.state === 'fallen' && gameState === 'STAGE1_DISCOVERY') {
