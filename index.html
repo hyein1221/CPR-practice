@@ -16,6 +16,22 @@
   canvas{width:var(--stage-w);height:var(--stage-h);image-rendering: pixelated;display:block;border-radius:10px;box-shadow:0 10px 32px #000c;border:2px solid #1b274f;}
   .ui-overlay { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, 0.85); border: 2px solid #fff; padding: 10px 20px; text-align: center; font-size: 16px; color: #fff; text-shadow: 1px 1px #000; display: none; border-radius: 5px;}
   .big-message { font-size: 32px; top: 50%; bottom: auto; transform: translate(-50%, -50%); padding: 20px 30px; }
+    .instructions {
+    width: var(--stage-w);
+    margin-top: 10px;
+    font-size: 12px;
+    color: #9ec1ff;
+    text-align: center;
+  }
+  .kbd {
+    padding: 2px 6px;
+    border: 1px solid #2a3d72;
+    border-radius: 4px;
+    background: #132252;
+    color: #cfe0ff;
+    font-family: "Press Start 2P";
+    vertical-align: middle;
+  }
 </style>
 </head>
 <body>
@@ -24,6 +40,14 @@
   <canvas id="game-canvas" width="960" height="540"></canvas>
   <div id="instruction-box" class="ui-overlay"></div>
   <div id="big-message-box" class="ui-overlay big-message"></div>
+
+  <div id="bottom-instructions" class="instructions">
+    조작: <span class="kbd">←</span> <span class="kbd">→</span> 이동 · <span class="kbd">Space</span> 상호작용
+  </div>
+
+  <footer>제작자: 질병관리청 국민소통단9기 김혜인 · 문의사항: <a href="mailto:hyein_1221@hanmail.net">hyein_1221@hanmail.net</a></footer>
+</div>
+</body>
 </div>
 
 <script>
@@ -124,21 +148,28 @@
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(assets.background, 0, 0, canvas.width, canvas.height);
     
-    let npcImage = (NPC.state === 'fallen') ? assets.npc_fallen : assets.npc_walking;
-    if (gameState === 'STAGE3_CPR' || gameState === 'STAGE4_AED' || gameState === 'SUCCESS') {
-        npcImage = assets.npc_walking;
-    }
-    ctx.drawImage(npcImage, NPC.x, NPC.y, NPC.w, NPC.h);
-    
+    // ✨ FIX: 플레이어 이미지 선택 로직 수정
     let playerImage;
     if (gameState === 'STAGE3_CPR') {
         playerImage = assets.player_cpr;
         PL.x = NPC.x - PL.w + 30; PL.y = NPC.y - 10;
     } else {
-        playerImage = (PL.state === 'walk') ? (PL.walkFrame === 0 ? assets.player_walk_1 : assets.player_walk_2) : assets.player_idle;
+        if (PL.state === 'walk') {
+            playerImage = (PL.walkFrame === 0) ? assets.player_walk_1 : assets.player_walk_2;
+        } else { // 'idle' 상태일 때 그릴 이미지를 명시
+            playerImage = assets.player_idle;
+        }
     }
     drawSprite(playerImage, PL.x, PL.y, PL.w, PL.h, PL.facing === -1);
 
+    // ✨ FIX: NPC를 나중에 그려서 느낌표가 플레이어 위에 오도록 수정
+    let npcImage = (NPC.state === 'fallen') ? assets.npc_fallen : assets.npc_walking;
+    if (gameState === 'STAGE3_CPR' || gameState === 'STAGE4_AED' || gameState === 'SUCCESS') {
+        npcImage = assets.npc_walking;
+    }
+    ctx.drawImage(npcImage, NPC.x, NPC.y, NPC.w, NPC.h);
+
+    // 나머지 UI 그리기
     if (NPC.state === 'fallen' && gameState === 'STAGE1_DISCOVERY') {
       ctx.drawImage(assets.exclamation, NPC.x + NPC.w / 2 - 16, NPC.y - 40, 32, 32);
     }
