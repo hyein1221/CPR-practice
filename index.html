@@ -14,25 +14,11 @@
   .wrap{display:flex;flex-direction:column;align-items:center;gap:10px;padding:14px}
   .topbar{width:var(--stage-w);background:var(--navy);color:#fff;padding:10px 14px;border-radius:8px;box-shadow:0 6px 18px #0008;font-size:14px; text-align: center;}
   canvas{width:var(--stage-w);height:var(--stage-h);image-rendering: pixelated;display:block;border-radius:10px;box-shadow:0 10px 32px #000c;border:2px solid #1b274f;}
-  .ui-overlay { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, 0.85); border: 2px solid #fff; padding: 10px 20px; text-align: center; font-size: 16px; color: #fff; text-shadow: 1px 1px #000; display: none; border-radius: 5px;}
+  .ui-overlay { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, 0.85); border: 2px solid #fff; padding: 10px 20px; text-align: center; font-size: 16px; color: #fff; text-shadow: 1px 1px #000; display: none; border-radius: 5px; z-index: 10;}
   .big-message { font-size: 32px; top: 50%; bottom: auto; transform: translate(-50%, -50%); padding: 20px 30px; }
-    .instructions {
-    width: var(--stage-w);
-    margin-top: 10px;
-    font-size: 14px;
-    color: #9ec1ff;
-    text-align: center;
-      footer{margin-top:12px;text-align:center;color:#6b7280;font-size:12px;} /* font-size 추가 */
-  }
-  .kbd {
-    padding: 2px 6px;
-    border: 1px solid #2a3d72;
-    border-radius: 4px;
-    background: #132252;
-    color: #cfe0ff;
-    font-family: "Press Start 2P";
-    vertical-align: middle;
-  }
+  .instructions { width: var(--stage-w); margin-top: 10px; font-size: 14px; color: #9ec1ff; text-align: center; }
+  .kbd { padding: 2px 6px; border: 1px solid #2a3d72; border-radius: 4px; background: #132252; color: #cfe0ff; font-family: "Press Start 2P"; vertical-align: middle; }
+  footer{margin-top:12px;text-align:center;color:#6b7280;font-size:12px;}
 </style>
 </head>
 <body>
@@ -41,14 +27,10 @@
   <canvas id="game-canvas" width="960" height="540"></canvas>
   <div id="instruction-box" class="ui-overlay"></div>
   <div id="big-message-box" class="ui-overlay big-message"></div>
-
   <div id="bottom-instructions" class="instructions">
     조작: <span class="kbd">←</span> <span class="kbd">→</span> 이동 · <span class="kbd">Space</span> 상호작용
   </div>
-
   <footer>제작자: 질병관리청 국민소통단9기 김혜인 · 문의사항: <a href="mailto:hyein_1221@hanmail.net">hyein_1221@hanmail.net</a></footer>
-</div>
-</body>
 </div>
 
 <script>
@@ -59,11 +41,11 @@
   const topBar = document.getElementById('top-bar');
   const instructionBox = document.getElementById('instruction-box');
   const bigMessageBox = document.getElementById('big-message-box');
+  const bottomInstructions = document.getElementById('bottom-instructions');
 
   let gameState = 'LOADING';
   const keys = {};
 
-  // ✨ FIX: GitHub Raw URL 경로로 수정
   const BASE_URL = 'https://raw.githubusercontent.com/hyein1221/CPR-practice/main/image/';
   const ASSET_PATHS = {
     background:   BASE_URL + 'background_park.png',
@@ -88,7 +70,7 @@
       Object.entries(ASSET_PATHS).map(([name, src]) => {
         return new Promise((resolve) => {
           const img = new Image();
-          img.crossOrigin = "Anonymous"; // GitHub Raw URL 사용 시 필요
+          img.crossOrigin = "Anonymous";
           img.src = src;
           assets[name] = img;
           img.onload = () => {
@@ -100,7 +82,7 @@
           };
           img.onerror = () => {
             console.error(`이미지 로드 실패: ${src}`);
-            alert(`오류: ${src} 파일을 찾을 수 없습니다. GitHub 저장소에 파일이 정확히 있는지 확인해주세요.`);
+            alert(`오류: ${src} 파일을 찾을 수 없습니다.`);
             resolve();
           };
         });
@@ -133,8 +115,11 @@
       PL.state = isMoving ? 'walk' : 'idle';
       PL.x = Math.max(0, Math.min(canvas.width - PL.w, PL.x));
       if (isMoving) {
-        PL.walkTick = (PL.walkTick + 1) % PL.walkSpeed;
-        if (PL.walkTick === 0) PL.walkFrame = (PL.walkFrame + 1) % 2;
+        PL.walkTick++;
+        if (PL.walkTick > PL.walkSpeed) {
+          PL.walkTick = 0;
+          PL.walkFrame = (PL.walkFrame + 1) % 2;
+        }
       }
     }
     if (gameState === 'STAGE3_CPR') {
@@ -149,40 +134,39 @@
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(assets.background, 0, 0, canvas.width, canvas.height);
     
-    // NPC 그리기
-    const npcImage = (NPC.state === 'fallen') ? assets.npc_fallen : assets.npc_walking;
+    let npcImage = (NPC.state === 'fallen') ? assets.npc_fallen : assets.npc_walking;
+    if (gameState === 'STAGE3_CPR' || gameState === 'STAGE4_AED' || gameState === 'SUCCESS') {
+      npcImage = assets.npc_walking;
+    }
     ctx.drawImage(npcImage, NPC.x, NPC.y, NPC.w, NPC.h);
-    
-    // ✨ FIX: 플레이어 이미지 선택 로직 수정
+
     let playerImage;
-    if (gameState === 'STAGE2_CPR') {
-        playerImage = assets.player_cpr;
-        PL.x = NPC.x - PL.w + 30;
-        PL.y = NPC.y - 10;
+    if (gameState === 'STAGE3_CPR') {
+      playerImage = assets.player_cpr;
+      PL.x = NPC.x - PL.w + 40;
+      PL.y = NPC.y;
     } else {
-        // 'walk' 상태일 때는 걷는 이미지, 아닐 때는('idle') 서 있는 이미지
-        playerImage = (PL.state === 'walk') ? assets.player_walk : assets.player_idle;
+      playerImage = (PL.state === 'walk') ? (PL.walkFrame === 0 ? assets.player_walk_1 : assets.player_walk_2) : assets.player_idle;
     }
     drawSprite(playerImage, PL.x, PL.y, PL.w, PL.h, PL.facing === -1);
 
-    // 나머지 UI 그리기
     if (NPC.state === 'fallen' && gameState === 'STAGE1_DISCOVERY') {
       ctx.drawImage(assets.exclamation, NPC.x + NPC.w / 2 - 16, NPC.y - 40, 32, 32);
     }
     if (gameState === 'STAGE2_CALL') {
-        ctx.drawImage(assets.phone, canvas.width/2 - 200, canvas.height/2 - 200, 400, 400);
-        ctx.fillStyle = '#000'; ctx.font = "48px 'Press Start 2P'"; ctx.textAlign = 'center';
-        ctx.fillText(phoneInput, canvas.width / 2, 200);
+      ctx.drawImage(assets.phone, canvas.width/2 - 200, canvas.height/2 - 200, 400, 400);
+      ctx.fillStyle = '#000'; ctx.font = "48px 'Press Start 2P'"; ctx.textAlign = 'center';
+      ctx.fillText(phoneInput, canvas.width / 2, 200);
     }
     if (gameState === 'STAGE3_CPR') {
-        ctx.drawImage(assets.cprBar, cprBarUI.x, cprBarUI.y, cprBarUI.width, cprBarUI.height);
-        ctx.drawImage(assets.cprIndicator, cprIndicatorUI.x, cprIndicatorUI.y, cprIndicatorUI.width, cprIndicatorUI.height);
-        ctx.fillStyle = '#fff'; ctx.font = "18px 'Press Start 2P'"; ctx.textAlign = 'center';
-        ctx.fillText(`압박 성공: ${cprProgress} / ${CPR_TARGET_SUCCESS}`, canvas.width / 2, cprBarUI.y + 70);
+      ctx.drawImage(assets.cprBar, cprBarUI.x, cprBarUI.y, cprBarUI.width, cprBarUI.height);
+      ctx.drawImage(assets.cprIndicator, cprIndicatorUI.x, cprIndicatorUI.y, cprIndicatorUI.width, cprIndicatorUI.height);
+      ctx.fillStyle = '#fff'; ctx.font = "18px 'Press Start 2P'"; ctx.textAlign = 'center';
+      ctx.fillText(`압박 성공: ${cprProgress} / ${CPR_TARGET_SUCCESS}`, canvas.width / 2, cprBarUI.y + 70);
     }
     if (gameState === 'STAGE4_AED') {
-        const aedImage = (cprProgress < 1) ? assets.aed_closed : assets.aed_open;
-        ctx.drawImage(aedImage, canvas.width/2 - 100, canvas.height/2 - 100, 200, 200);
+      const aedImage = (cprProgress < 1) ? assets.aed_closed : assets.aed_open;
+      ctx.drawImage(aedImage, canvas.width/2 - 100, canvas.height/2 - 100, 200, 200);
     }
   }
   
@@ -195,7 +179,6 @@
   
   function handleKeyPress(e) {
     const key = e.key; const code = e.code;
-
     switch(gameState) {
       case 'STAGE1_DISCOVERY':
         if (code === 'Space' && Math.abs(PL.x - NPC.x) < 80) {
@@ -203,6 +186,7 @@
           topBar.textContent = "2단계: 알리기 - 119에 신고!";
           instructionBox.style.display = 'block';
           instructionBox.textContent = "키보드 숫자 1, 1, 9를 차례로 누르세요!";
+          bottomInstructions.style.display = 'none';
         }
         break;
       case 'STAGE2_CALL':
@@ -232,15 +216,14 @@
         break;
       case 'STAGE4_AED':
         if (code === 'Space') {
-          cprProgress = 1; // AED 연 모습으로 바꾸기 위함
+          cprProgress = 1;
           instructionBox.textContent = "Enter를 눌러 전기 충격을 가하세요.";
-          setTimeout(() => {
+        } else if (code === 'Enter' && cprProgress === 1) {
             gameState = 'SUCCESS';
             topBar.textContent = '성공! 생명을 구했습니다!';
             instructionBox.innerHTML = "Enter를 눌러 다시 시작";
             bigMessageBox.style.display = 'block';
             bigMessageBox.textContent = "미션 성공!";
-          }, 1500);
         }
         break;
       case 'SUCCESS':
