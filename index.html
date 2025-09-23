@@ -201,7 +201,7 @@
     if (gameState === 'STAGE4_AED') {
         // ✨ FIX: AED 이미지 세로 길이 확대 (이전 수정사항 유지)
         const aedImage = (cprProgress < 1) ? assets.aed_closed : assets.aed_open;
-        ctx.drawImage(aedImage, canvas.width/2 - 125, canvas.height/2 - 125, 250, 300); // 높이 250 -> 300으로 변경
+        ctx.drawImage(aedImage, canvas.width/2 - 125, canvas.height/2 - 125, 200, 300); // 높이 250 -> 300으로 변경
     }
   }
   function drawSprite(img, x, y, w, h, flip) {
