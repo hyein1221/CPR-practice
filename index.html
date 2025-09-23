@@ -28,7 +28,7 @@
   <div id="instruction-box" class="ui-overlay"></div>
   <div id="big-message-box" class="ui-overlay big-message"></div>
   <div id="bottom-instructions" class="instructions">
-    조작: <span class="kbd">←</span> <span class="kbd">→</span> 이동 · <span class="kbd">Space</span> 상호작용
+    조작: <span class="kbd">←</span> <span class="kbd">→</span> 이동 · <span class="kbd">Space</span> 깨우기
   </div>
   <footer>제작자: 질병관리청 국민소통단9기 김혜인 · 문의사항: <a href="mailto:hyein_1221@hanmail.net">hyein_1221@hanmail.net</a></footer>
 </div>
@@ -50,7 +50,8 @@
   const ASSET_PATHS = {
     background:   BASE_URL + 'background_park.png',
     player_idle:  BASE_URL + 'player_sprite_2.png',
-    player_walk:  BASE_URL + 'player_sprite_1.png',
+    player_walk_1: BASE_URL + 'player_sprite_1.png',
+    player_walk_2: BASE_URL + 'player_sprite_2.png',
     player_cpr:   BASE_URL + 'player_sprite_3.png',
     npc_fallen:   BASE_URL + 'npc_1.png',
     npc_walking:  BASE_URL + 'npc_sprite_2.png',
@@ -130,37 +131,39 @@
     }
   }
 
- function draw() {
+  function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(assets.background, 0, 0, canvas.width, canvas.height);
     
-    // NPC 그리기
+    // ✨ FIX: 그리는 순서 변경 (NPC -> 느낌표 -> 플레이어)
+    // 1. NPC 그리기
     let npcImage = (NPC.state === 'fallen') ? assets.npc_fallen : assets.npc_walking;
     if (gameState === 'STAGE3_CPR' || gameState === 'STAGE4_AED' || gameState === 'SUCCESS') {
       npcImage = assets.npc_walking;
     }
     ctx.drawImage(npcImage, NPC.x, NPC.y, NPC.w, NPC.h);
 
-    // ✨ FIX: 플레이어 이미지 선택 로직 수정
-    let playerImage;
-    if (gameState === 'STAGE3_CPR') {
-        playerImage = assets.player_cpr;
-        PL.x = NPC.x - PL.w + 40;
-        PL.y = NPC.y;
-    } else {
-        if (PL.state === 'walk') {
-            // 걷는 애니메이션 프레임에 따라 이미지 선택
-            playerImage = (PL.walkFrame === 0) ? assets.player_walk_1 : assets.player_walk_2;
-        } else { // 'idle' 상태일 때 그릴 이미지를 명확히 지정
-            playerImage = assets.player_idle;
-        }
-    }
-    drawSprite(playerImage, PL.x, PL.y, PL.w, PL.h, PL.facing === -1);
-
-    // 나머지 UI 그리기
+    // 2. 느낌표 그리기 (NPC를 그린 후)
     if (NPC.state === 'fallen' && gameState === 'STAGE1_DISCOVERY') {
       ctx.drawImage(assets.exclamation, NPC.x + NPC.w / 2 - 16, NPC.y - 40, 32, 32);
     }
+    
+    // 3. 플레이어 그리기 (모든 배경 요소 그린 후)
+    let playerImage;
+    if (gameState === 'STAGE3_CPR') {
+      playerImage = assets.player_cpr;
+      PL.x = NPC.x - PL.w + 40;
+      PL.y = NPC.y;
+    } else {
+      if (PL.state === 'walk') {
+        playerImage = (PL.walkFrame === 0) ? assets.player_walk_1 : assets.player_walk_2;
+      } else {
+        playerImage = assets.player_idle;
+      }
+    }
+    drawSprite(playerImage, PL.x, PL.y, PL.w, PL.h, PL.facing === -1);
+
+    // 4. 나머지 UI 그리기
     if (gameState === 'STAGE2_CALL') {
         ctx.drawImage(assets.phone, canvas.width/2 - 200, canvas.height/2 - 200, 400, 400);
         ctx.fillStyle = '#000'; ctx.font = "48px 'Press Start 2P'"; ctx.textAlign = 'center';
