@@ -12,37 +12,28 @@
   html,body{height:100%;margin:0;background:#0b0f1a;color:var(--text);font-family: "Press Start 2P", system-ui, sans-serif;}
   .wrap{display:flex;flex-direction:column;align-items:center;gap:10px;padding:14px;position:relative;width:100%;max-width:960px;margin:0 auto;}
   .topbar{width:100%;background:var(--navy);color:#fff;padding:10px 14px;border-radius:8px;box-shadow:0 6px 18px #0008;font-size:14px; text-align: center;}
-  
-  /* ✨ FIX: 캔버스가 화면 크기에 맞게 자동으로 조절되도록 수정 */
   canvas{
-    width: 100%;
-    aspect-ratio: 16 / 9; /* 960x540 비율 유지 */
-    image-rendering: pixelated;
-    display:block;
-    border-radius:10px;
-    box-shadow:0 10px 32px #000c;
-    border:2px solid #1b274f;
+    width: 100%; aspect-ratio: 16 / 9; image-rendering: pixelated;
+    display:block; border-radius:10px; box-shadow:0 10px 32px #000c; border:2px solid #1b274f;
   }
-
   .ui-overlay { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, 0.85); border: 2px solid #fff; padding: 10px 20px; text-align: center; font-size: 16px; color: #fff; text-shadow: 1px 1px #000; display: none; border-radius: 5px; z-index: 10; width: 90%; max-width: 800px;}
   .big-message { font-size: 32px; top: 50%; bottom: auto; transform: translate(-50%, -50%); padding: 20px 30px; }
   footer{margin-top:12px;text-align:center;color:#6b7280;font-size:12px;}
 
-  /* --- 가상 컨트롤러 스타일 --- */
   #virtual-controls {
     display: none; position: fixed; bottom: 0; left: 0;
     width: 100%; padding: 20px; box-sizing: border-box;
     justify-content: space-between; align-items: center;
     user-select: none; z-index: 100; pointer-events: none;
   }
-  /* ✨ FIX: 조이스틱을 D-Pad 버튼으로 교체 */
-  #d-pad { display: flex; align-items: center; gap: 10px; pointer-events: auto; }
+  #d-pad, #action-button-pad { pointer-events: auto; }
+  #d-pad { display: flex; align-items: center; gap: 10px; }
   .d-pad-btn {
     width: 50px; height: 50px; background: rgba(0,0,0,0.4); border-radius: 50%;
     display: flex; justify-content: center; align-items: center;
     font-size: 24px; color: #fff; border: 2px solid rgba(255,255,255,0.5);
   }
-  #action-button-pad { display: flex; gap: 20px; pointer-events: auto; }
+  #action-button-pad { display: flex; }
   .v-btn {
     width: 70px; height: 70px; background: rgba(0,0,0,0.4); border-radius: 50%;
     display: flex; justify-content: center; align-items: center;
@@ -50,7 +41,7 @@
   }
   #call-button {
     display: none; position: fixed;
-    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    top: 50%; left: 75%; transform: translate(-50%, -50%);
     width: 200px; height: 80px; z-index: 101; font-size: 24px;
     background: #e53935; border-color: #fff; pointer-events: auto;
   }
@@ -69,7 +60,6 @@
     <div id="btn-right" class="d-pad-btn">→</div>
   </div>
   <div id="action-button-pad">
-    <div id="action-button-b" class="v-btn">Enter</div>
     <div id="action-button-a" class="v-btn">Space</div>
   </div>
 </div>
@@ -91,7 +81,6 @@
   const bigMessageBox = document.getElementById('big-message-box');
   let gameState = 'LOADING';
   const keys = {};
-
   const BASE_URL = 'https://raw.githubusercontent.com/hyein1221/CPR-practice/main/image/';
   const ASSET_PATHS = {
     background:   BASE_URL + 'background_park.png',
@@ -127,10 +116,7 @@
             ctx.fillText(`로딩 중... (${loadedCount}/${totalAssets})`, canvas.width / 2, canvas.height / 2);
             resolve();
           };
-          img.onerror = () => {
-            alert(`오류: ${src} 파일을 찾을 수 없습니다.`);
-            resolve();
-          };
+          img.onerror = () => { alert(`오류: ${src} 파일을 찾을 수 없습니다.`); resolve(); };
         });
       })
     );
@@ -143,7 +129,7 @@
   const NPC = { w: 128, h: 128, x: 700, y: 280, state: 'fallen' };
   
   const exclamation = {
-    x: NPC.x + NPC.w / 2 - 16, y: NPC.y - 30,
+    x: NPC.x + NPC.w / 2 - 16, y: NPC.y - 60,
     w: 32, h: 48,
     visible: true, tick: 0, speed: 30
   };
@@ -157,7 +143,6 @@
   let phoneInput = "";
   const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
-  // ✨ FIX: 조이스틱 로직을 새 버튼 로직으로 교체
   function setupVirtualControls() {
     if (!isTouchDevice) return;
 
@@ -165,10 +150,8 @@
     const btnUp = document.getElementById('btn-up');
     const btnRight = document.getElementById('btn-right');
     const btnA = document.getElementById('action-button-a');
-    const btnB = document.getElementById('action-button-b');
     const callButton = document.getElementById('call-button');
 
-    // 왼쪽/오른쪽 버튼 이벤트
     const handleMove = (e, key, isPressed) => {
         e.preventDefault();
         keys[key] = isPressed;
@@ -178,17 +161,13 @@
     btnRight.addEventListener('touchstart', (e) => handleMove(e, 'ArrowRight', true), { passive: false });
     btnRight.addEventListener('touchend', (e) => handleMove(e, 'ArrowRight', false));
 
-    // 위쪽 버튼 (CPR용)
     btnUp.addEventListener('touchstart', (e) => {
         e.preventDefault();
-        if (gameState === 'STAGE3_CPR') {
-            handleKeyPress({ code: 'ArrowUp' });
-        }
+        handleKeyPress({ code: 'ArrowUp' });
     }, { passive: false });
     
-    // A/B/Call 버튼
     btnA.addEventListener('touchstart', (e) => { e.preventDefault(); handleKeyPress({ code: 'Space' }); }, { passive: false });
-    btnB.addEventListener('touchstart', (e) => { e.preventDefault(); handleKeyPress({ code: 'Enter' }); }, { passive: false });
+    
     callButton.addEventListener('touchstart', (e) => {
       e.preventDefault();
       if (gameState === 'STAGE2_CALL') {
@@ -197,7 +176,6 @@
       }
     }, { passive: false });
   }
-
 
   window.addEventListener('keydown', e => { keys[e.code] = true; handleKeyPress(e); });
   window.addEventListener('keyup', e => { keys[e.code] = false; });
@@ -238,7 +216,6 @@
     
     let playerImage;
     let playerX = PL.x, playerY = PL.y, playerW = PL.w, playerH = PL.h;
-
     let npcImage = (NPC.state === 'fallen') ? assets.npc_fallen : assets.npc_walking;
     let npcX = NPC.x, npcY = NPC.y, npcW = NPC.w, npcH = NPC.h;
 
@@ -314,16 +291,14 @@
         if (phoneInput === '119') {
           gameState = 'STAGE3_CPR';
           topBar.textContent = "3단계: 누르기 - 가슴 압박 " + CPR_TARGET_SUCCESS + "회";
-          instructionBox.textContent = isTouchDevice ? "막대가 파란 영역에 왔을 때 ↑ 키를 누르세요!"; "막대가 파란 영역에 왔을 때 ↑ 키를 누르세요!";
+          instructionBox.textContent = "PC: ↑ 키 | 모바일: ↑ 버튼";
           if (isTouchDevice) callButton.style.display = 'none';
         } else if (phoneInput.length >= 3) {
             phoneInput = "";
         }
         break;
       case 'STAGE3_CPR':
-        // ✨ FIX: 터치 이벤트를 위해 canvas에 리스너 추가 (setupVirtualControls 밖으로)
-        const cprKeyPressed = code === 'ArrowUp';
-        if (cprKeyPressed) {
+        if (code === 'ArrowUp') {
           const indicatorCenter = cprIndicatorUI.x + cprIndicatorUI.width / 2;
           const sweetSpotStart = cprSweetSpot.x;
           const sweetSpotEnd = cprSweetSpot.x + cprSweetSpot.width;
@@ -332,7 +307,7 @@
             if (cprProgress >= CPR_TARGET_SUCCESS) {
               gameState = 'STAGE4_AED'; cprProgress = 0;
               topBar.textContent = '4단계: 사용하기 - AED 사용';
-              instructionBox.textContent = isTouchDevice ? "Space를 눌러 AED를 사용하세요."; "Space를 눌러 AED를 사용하세요.";
+              instructionBox.textContent = "PC: Space | 모바일: Space 버튼";
             }
           }
         }
@@ -340,17 +315,17 @@
       case 'STAGE4_AED':
         if (code === 'Space') {
           cprProgress = 1;
-          instructionBox.textContent = "Enter를 눌러 전기 충격을 가하세요.";
+          instructionBox.textContent = "PC: Enter | 모바일: Enter 버튼";
         } else if (code === 'Enter' && cprProgress === 1) {
             gameState = 'SUCCESS';
             topBar.textContent = '미션 성공! 생명을 구했습니다!';
-            instructionBox.innerHTML = "Enter를 눌러 다시 시작";
+            instructionBox.innerHTML = "다시 시작하려면 Space 또는 Enter!";
             bigMessageBox.style.display = 'block';
             bigMessageBox.textContent = "미션 성공!";
         }
         break;
       case 'SUCCESS':
-        if (code === 'Enter') window.location.reload();
+        if (code === 'Enter' || code === 'Space') window.location.reload();
         break;
     }
   }
@@ -361,23 +336,13 @@
     requestAnimationFrame(gameLoop);
   }
 
-  async function start() {
+  function start() {
     setupVirtualControls();
     gameState = 'STAGE1_DISCOVERY';
     topBar.textContent = '1단계: 깨우기 - 환자에게 다가가기';
     instructionBox.style.display = 'block';
     instructionBox.innerHTML = "조작: <span class='kbd'>←</span> <span class='kbd'>→</span> 이동 · <span class='kbd'>Space</span> 상호작용";
     requestAnimationFrame(gameLoop);
-    
-    // ✨ FIX: 3단계 터치 이벤트를 위해 canvas에 리스너 추가
-    if (isTouchDevice) {
-        canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            if (gameState === 'STAGE3_CPR') {
-                handleKeyPress({ code: 'ArrowUp' }); // 위쪽 화살표 키 입력을 시뮬레이션
-            }
-        }, { passive: false });
-    }
   }
 
   loadAssets().then(start);
