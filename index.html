@@ -145,26 +145,40 @@
     }
   }
 
-  function draw() {
+function draw() {
+    // 1. 화면 초기화 및 배경 그리기
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(assets.background, 0, 0, canvas.width, canvas.height);
     
+    // 2. NPC 그리기 로직
     let npcImage = (NPC.state === 'fallen') ? assets.npc_fallen : assets.npc_walking;
+    let npcX = NPC.x;
+    let npcY = NPC.y;
+    let npcW = NPC.w;
+    let npcH = NPC.h;
+
+    // CPR 단계일 때 NPC 위치와 크기 조정
     if (gameState === 'STAGE3_CPR' || gameState === 'STAGE4_AED' || gameState === 'SUCCESS') {
       npcImage = assets.npc_walking;
+      npcX = 650;
+      npcW = 100;
+      npcH = 100;
     }
-    ctx.drawImage(npcImage, NPC.x, NPC.y, NPC.w, NPC.h);
+    ctx.drawImage(npcImage, npcX, npcY, npcW, npcH); // 조정된 값으로 NPC를 그림
 
+    // 3. 플레이어 그리기 로직
     let playerImage;
     if (gameState === 'STAGE3_CPR') {
-      playerImage = assets.player_cpr;
-      PL.x = NPC.x - PL.w + 40;
-      PL.y = NPC.y;
+        playerImage = assets.player_cpr;
+        // 조정된 NPC 위치에 맞춰 플레이어 위치 설정
+        PL.x = npcX - PL.w + 70; 
+        PL.y = npcY - 10;
     } else {
-      playerImage = (PL.state === 'walk') ? (PL.walkFrame === 0 ? assets.player_walk_1 : assets.player_walk_2) : assets.player_idle;
+        playerImage = (PL.state === 'walk') ? (PL.walkFrame === 0 ? assets.player_walk_1 : assets.player_walk_2) : assets.player_idle;
     }
     drawSprite(playerImage, PL.x, PL.y, PL.w, PL.h, PL.facing === -1);
 
+    // 4. 나머지 UI 그리기
     if (NPC.state === 'fallen' && gameState === 'STAGE1_DISCOVERY') {
       ctx.drawImage(assets.exclamation, NPC.x + NPC.w / 2 - 16, NPC.y - 40, 32, 32);
     }
@@ -176,14 +190,7 @@
     if (gameState === 'STAGE3_CPR') {
         ctx.drawImage(assets.cprBar, cprBarUI.x, cprBarUI.y, cprBarUI.width, cprBarUI.height);
         ctx.drawImage(assets.cprIndicator, cprIndicatorUI.x, cprIndicatorUI.y, cprIndicatorUI.width, cprIndicatorUI.height);
-        ctx.fillStyle = '#fff'; ctx.font = "18px 'Press Start 2P'"; ctx.textAlign = 'center';
-        ctx.fillText(`압박 성공: ${cprProgress} / ${CPR_TARGET_SUCCESS}`, canvas.width / 2, cprBarUI.y + cprBarUI.height + 25);
-    }
-    if (gameState === 'STAGE4_AED') {
-        const aedImage = (cprProgress < 1) ? assets.aed_closed : assets.aed_open;
-        ctx.drawImage(aedImage, canvas.width/2 - 100, canvas.height/2 - 100, 200, 200);
-    }
-  }
+        ctx
   
   function drawSprite(img, x, y, w, h, flip) {
     ctx.save();
