@@ -155,16 +155,21 @@ function draw() {
 
     if (gameState === 'STAGE3_CPR' || gameState === 'STAGE4_AED' || gameState === 'SUCCESS') {
       npcImage = assets.npc_walking;
-      npcX = 650; npcW = 100; npcH = 100;
+         npcX = 630; // ✨ FIX: NPC를 왼쪽으로 조금 더 이동
+      npcY = 300; // ✨ FIX: NPC를 앞으로(아래로) 조금 더 이동
+      npcW = 100;
+      npcH = 100;
     }
+    c
     ctx.drawImage(npcImage, npcX, npcY, npcW, npcH);
 
-    // 플레이어 그리기
+    // 3. 플레이어 그리기 로직
     let playerImage;
     if (gameState === 'STAGE3_CPR') {
         playerImage = assets.player_cpr;
-        PL.x = npcX - PL.w + 70; 
-        PL.y = npcY - 10;
+        // ✨ FIX: 조정된 NPC 위치에 맞춰 플레이어 위치 재조정
+        PL.x = npcX + 20;  // NPC와 겹치도록 x좌표 수정
+        PL.y = npcY - 20;  // NPC보다 살짝 뒤로(위로) y좌표 수정
     } else {
         playerImage = (PL.state === 'walk') ? (PL.walkFrame === 0 ? assets.player_walk_1 : assets.player_walk_2) : assets.player_idle;
     }
@@ -186,14 +191,19 @@ function draw() {
         ctx.fillStyle = '#000';
         ctx.fillText(phoneInput, canvas.width / 2, 200);
     }
-    if (gameState === 'STAGE3_CPR') {
+   if (gameState === 'STAGE3_CPR') {
         ctx.drawImage(assets.cprBar, cprBarUI.x, cprBarUI.y, cprBarUI.width, cprBarUI.height);
         ctx.drawImage(assets.cprIndicator, cprIndicatorUI.x, cprIndicatorUI.y, cprIndicatorUI.width, cprIndicatorUI.height);
-        // ✨ FIX: 텍스트 그리는 코드가 여기서 끝나도록 수정
-        ctx.fillStyle = '#fff';
+
+        // ✨ FIX: 텍스트 스타일 및 위치 수정
         ctx.font = "18px 'Press Start 2P'";
         ctx.textAlign = 'center';
-        ctx.fillText(`압박 성공: ${cprProgress} / ${CPR_TARGET_SUCCESS}`, canvas.width / 2, cprBarUI.y + 70);
+        ctx.strokeStyle = '#fff'; // 테두리 색상 (흰색)
+        ctx.lineWidth = 4;        // 테두리 두께
+        ctx.strokeText(`압박 성공: ${cprProgress} / ${CPR_TARGET_SUCCESS}`, canvas.width / 2, cprBarUI.y + 85); // y좌표 수정 (아래로 이동)
+
+        ctx.fillStyle = '#000';  // 글자 색상 (검은색)
+        ctx.fillText(`압박 성공: ${cprProgress} / ${CPR_TARGET_SUCCESS}`, canvas.width / 2, cprBarUI.y + 85);   // y좌표 수정 (아래로 이동)
     }
     if (gameState === 'STAGE4_AED') {
         const aedImage = (cprProgress < 1) ? assets.aed_closed : assets.aed_open;
