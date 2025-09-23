@@ -22,11 +22,71 @@
   }
   .big-message { font-size: 32px; top: 50%; bottom: auto; transform: translate(-50%, -50%); padding: 20px 30px; }
   footer{margin-top:12px;text-align:center;color:#6b7280;font-size:12px;}
+
+  /* --- 가상 컨트롤러 스타일 --- */
+  #virtual-controls {
+    display: none; /* 기본적으로 숨김 */
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 150px;
+    padding: 20px;
+    box-sizing: border-box;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none; /* 텍스트 선택 방지 */
+    z-index: 100;
+  }
+  #joystick-pad {
+    width: 120px; height: 120px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    position: relative;
+  }
+  #joystick-handle {
+    width: 60px; height: 60px;
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+    position: absolute;
+    top: 30px; left: 30px;
+    transition: transform 0.1s;
+  }
+  #action-button-pad {
+    display: flex;
+    gap: 20px;
+  }
+  .v-btn {
+    width: 60px; height: 60px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: "Press Start 2P";
+    font-size: 20px;
+    color: #fff;
+  }
+  /* 터치스크린 기기에서만 컨트롤러 보이게 하기 */
+  @media (pointer: coarse) {
+    #virtual-controls {
+      display: flex;
+    }
+  }
 </style>
 </head>
 <body>
+<div id="virtual-controls">
+  <div id="joystick-pad">
+    <div id="joystick-handle"></div>
+  </div>
+  <div id="action-button-pad">
+    <div id="action-button-a" class="v-btn">A</div>
+    <div id="action-button-b" class="v-btn">B</div>
+  </div>
+</div>
 <div class="wrap">
-  <div id="top-bar" class="topbar">1단계: 깨우기 - 환자에게 다가가기</div>
+  <div id="top-bar" class="topbar">1단계: 깨우기- 길에서 쓰러진 사람 발견!</div>
   <canvas id="game-canvas" width="960" height="540"></canvas>
   <div id="instruction-box" class="ui-overlay"></div>
   <div id="big-message-box" class="ui-overlay big-message"></div>
@@ -109,6 +169,61 @@
   
   let phoneInput = "";
 
+  // --- 가상 컨트롤러 로직 ---
+  function setupVirtualControls() {
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    if (!isTouchDevice) return;
+
+    const controls = document.getElementById('virtual-controls');
+    controls.style.display = 'flex';
+
+    const joystick = document.getElementById('joystick-handle');
+    const joystickPad = document.getElementById('joystick-pad');
+    const btnA = document.getElementById('action-button-a');
+    const btnB = document.getElementById('action-button-b');
+    let joystickActive = false;
+    let startX;
+
+    joystickPad.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      joystickActive = true;
+      startX = e.touches[0].clientX;
+    }, { passive: false });
+
+    joystickPad.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      if (!joystickActive) return;
+      const deltaX = e.touches[0].clientX - startX;
+      
+      const moveX = Math.max(-30, Math.min(30, deltaX));
+      joystick.style.transform = `translateX(${moveX}px)`;
+
+      keys['ArrowRight'] = deltaX > 15;
+      keys['ArrowLeft'] = deltaX < -15;
+    }, { passive: false });
+
+    const endTouch = (e) => {
+        e.preventDefault();
+        joystickActive = false;
+        joystick.style.transform = 'none';
+        keys['ArrowRight'] = false;
+        keys['ArrowLeft'] = false;
+    };
+    joystickPad.addEventListener('touchend', endTouch);
+    joystickPad.addEventListener('touchcancel', endTouch);
+
+    // A 버튼: Space 키 역할
+    btnA.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      handleKeyPress({ code: 'Space', key: ' ' });
+    }, { passive: false });
+    // B 버튼: Enter 키 역할
+    btnB.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      handleKeyPress({ code: 'Enter', key: 'Enter' });
+    }, { passive: false });
+  }
+
   window.addEventListener('keydown', e => { keys[e.code] = true; handleKeyPress(e); });
   window.addEventListener('keyup', e => { keys[e.code] = false; });
 
@@ -158,7 +273,7 @@
       npcX = 630; npcY = 300; npcW = 120; npcH = 100;
       
       playerImage = assets.player_cpr;
-      playerX = npcX; playerY = npcY - 50;
+      playerX = npcX; playerY = npcY - 30;
     } else {
       playerImage = (PL.state === 'walk') ? (PL.walkFrame === 0 ? assets.player_walk_1 : assets.player_walk_2) : assets.player_idle;
     }
@@ -273,6 +388,8 @@
     requestAnimationFrame(gameLoop);
   }
 
+  // ✨ `init()` 함수(또는 게임 시작 함수) 맨 처음에 아래 함수 호출 추가
+  setupVirtualControls();
   loadAssets().then(start);
 </script>
 </body>
