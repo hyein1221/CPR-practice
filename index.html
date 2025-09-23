@@ -145,33 +145,33 @@
     }
   }
 
-function draw() {
+  function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(assets.background, 0, 0, canvas.width, canvas.height);
     
-    // NPC 그리기 변수 설정
-    let npcImage = (NPC.state === 'fallen') ? assets.npc_fallen : assets.npc_walking;
-    let npcX = NPC.x, npcY = NPC.y, npcW = NPC.w, npcH = NPC.h;
-
     // 플레이어 그리기 변수 설정
     let playerImage;
     let playerX = PL.x, playerY = PL.y, playerW = PL.w, playerH = PL.h;
 
+    // NPC 그리기 변수 설정
+    let npcImage = (NPC.state === 'fallen') ? assets.npc_fallen : assets.npc_walking;
+    let npcX = NPC.x, npcY = NPC.y, npcW = NPC.w, npcH = NPC.h;
+
     // 3단계 또는 4단계일 경우 NPC와 플레이어의 위치, 크기, 이미지 재설정
     if (gameState === 'STAGE3_CPR' || gameState === 'STAGE4_AED' || gameState === 'SUCCESS') {
-      npcImage = assets.npc_walking; // 누워있는 포즈
-      npcX = 630; npcY = 300; npcW = 100; npcH = 100; // NPC 위치/크기 조정
+      npcImage = assets.npc_walking;
+      npcX = 630; npcY = 300; npcW = 100; npcH = 100;
       
-      playerImage = assets.player_cpr; // 플레이어 CPR 포즈
-      playerX = npcX + 20;  // 조정된 NPC에 맞춰 위치 재조정
+      playerImage = assets.player_cpr;
+      playerX = npcX + 20;
       playerY = npcY - 20;
-    } else { // 1, 2단계일 경우
+    } else {
       playerImage = (PL.state === 'walk') ? (PL.walkFrame === 0 ? assets.player_walk_1 : assets.player_walk_2) : assets.player_idle;
     }
     
-    // 최종적으로 화면에 그리기
-    ctx.drawImage(npcImage, npcX, npcY, npcW, npcH);
+    // ✨ FIX: 플레이어를 먼저 그리고 NPC를 나중에 그려서 NPC가 위에 오도록 수정
     drawSprite(playerImage, playerX, playerY, playerW, playerH, PL.facing === -1);
+    ctx.drawImage(npcImage, npcX, npcY, npcW, npcH);
 
     // 나머지 UI 그리기
     if (NPC.state === 'fallen' && gameState === 'STAGE1_DISCOVERY') {
