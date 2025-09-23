@@ -59,7 +59,8 @@
     <div id="btn-up" class="d-pad-btn">↑</div>
     <div id="btn-right" class="d-pad-btn">→</div>
   </div>
-  <div id="action-button-pad">
+<div id="action-button-pad">
+    <div id="action-button-b" class="v-btn">Enter</div>
     <div id="action-button-a" class="v-btn">Space</div>
   </div>
 </div>
@@ -150,6 +151,7 @@
     const btnUp = document.getElementById('btn-up');
     const btnRight = document.getElementById('btn-right');
     const btnA = document.getElementById('action-button-a');
+    const btnB = document.getElementById('action-button-b');
     const callButton = document.getElementById('call-button');
 
     const handleMove = (e, key, isPressed) => {
@@ -167,6 +169,7 @@
     }, { passive: false });
     
     btnA.addEventListener('touchstart', (e) => { e.preventDefault(); handleKeyPress({ code: 'Space' }); }, { passive: false });
+    btnB.addEventListener('touchstart', (e) => { e.preventDefault(); handleKeyPress({ code: 'Enter' }); }, { passive: false });
     
     callButton.addEventListener('touchstart', (e) => {
       e.preventDefault();
