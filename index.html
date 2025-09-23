@@ -246,10 +246,10 @@ function draw() {
           instructionBox.textContent = "Enter를 눌러 전기 충격을 가하세요.";
         } else if (code === 'Enter' && cprProgress === 1) {
             gameState = 'SUCCESS';
-            topBar.textContent = '성공! 생명을 구했습니다!';
+            topBar.textContent = '미션 성공! 생명을 구했습니다!';
             instructionBox.innerHTML = "Enter를 눌러 다시 시작";
             bigMessageBox.style.display = 'block';
-            bigMessageBox.textContent = "미션 성공!";
+            bigMessageBox.textContent = "미션 성공! 생명을 구했습니다!";
         }
         break;
       case 'SUCCESS':
