@@ -314,7 +314,7 @@
         if (phoneInput === '119') {
           gameState = 'STAGE3_CPR';
           topBar.textContent = "3단계: 누르기 - 가슴 압박 " + CPR_TARGET_SUCCESS + "회";
-          instructionBox.textContent = isTouchDevice ? "화면 아무 곳이나 터치하여 압박!" : "막대가 파란 영역에 왔을 때 ↑ 키를 누르세요!";
+          instructionBox.textContent = isTouchDevice ? "막대가 파란 영역에 왔을 때 ↑ 키를 누르세요!";
           if (isTouchDevice) callButton.style.display = 'none';
         } else if (phoneInput.length >= 3) {
             phoneInput = "";
