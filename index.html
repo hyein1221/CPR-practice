@@ -156,7 +156,7 @@
   const NPC = { w: 128, h: 128, x: 700, y: 280, state: 'fallen' };
   
   const exclamation = {
-    x: NPC.x + NPC.w / 2 - 16, y: NPC.y - 60,
+    x: NPC.x + NPC.w / 2 - 16, y: NPC.y - 30,
     w: 32, h: 48,
     visible: true, tick: 0, speed: 30
   };
@@ -273,7 +273,7 @@
       npcX = 630; npcY = 300; npcW = 120; npcH = 100;
       
       playerImage = assets.player_cpr;
-      playerX = npcX; playerY = npcY - 30;
+      playerX = npcX; playerY = npcY - 45;
     } else {
       playerImage = (PL.state === 'walk') ? (PL.walkFrame === 0 ? assets.player_walk_1 : assets.player_walk_2) : assets.player_idle;
     }
