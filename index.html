@@ -26,7 +26,7 @@
 </head>
 <body>
 <div class="wrap">
-  <div id="top-bar" class="topbar">1단계: 깨우기- 길에서 쓰러진 사람 발견!</div>
+  <div id="top-bar" class="topbar">1단계: 깨우기 - 환자에게 다가가기</div>
   <canvas id="game-canvas" width="960" height="540"></canvas>
   <div id="instruction-box" class="ui-overlay"></div>
   <div id="big-message-box" class="ui-overlay big-message"></div>
@@ -95,20 +95,15 @@
   };
   const NPC = { w: 128, h: 128, x: 700, y: 280, state: 'fallen' };
   
-  // ✨ FIX: 느낌표 객체 추가 및 초기 위치/크기 설정
   const exclamation = {
-    x: NPC.x + NPC.w / 2 - 16,
-    y: NPC.y - 30, // y좌표 수정
-    w: 32,
-    h: 60, // 높이 32 -> 60으로 더 키움
-    visible: true,
-    tick: 0,
-    speed: 30 // 깜빡이는 속도 (숫자가 클수록 느림)
+    x: NPC.x + NPC.w / 2 - 16, y: NPC.y - 60,
+    w: 32, h: 48,
+    visible: true, tick: 0, speed: 30
   };
+  
   let cprProgress = 0;
   const CPR_TARGET_SUCCESS = 10;
-  // CPR 막대 세로 길이 수정 (이전 수정사항 유지)
-  const cprBarUI = { x: canvas.width / 2 - 150, y: 100, width: 300, height: 60 }; 
+  const cprBarUI = { x: canvas.width / 2 - 150, y: 100, width: 300, height: 60 };
   const cprIndicatorUI = { x: cprBarUI.x, y: 85, width: 20, height: 90, speed: 8, direction: 1 };
   const cprSweetSpot = { x: cprBarUI.x + cprBarUI.width * 0.4, width: cprBarUI.width * 0.2 };
   
@@ -139,12 +134,11 @@
       }
     }
     
-    // ✨ FIX: 느낌표 깜빡임 로직 - 플레이어 이동과 상관없이 계속 깜빡이도록 위치 수정
-    if (NPC.state === 'fallen' && gameState === 'STAGE1_DISCOVERY') { // 1단계일 때만 깜빡이도록 조건 추가
+    if (NPC.state === 'fallen' && gameState === 'STAGE1_DISCOVERY') {
         exclamation.tick++;
         if (exclamation.tick > exclamation.speed) {
             exclamation.tick = 0;
-            exclamation.visible = !exclamation.visible; // 보임/안보임 상태 전환
+            exclamation.visible = !exclamation.visible;
         }
     }
   }
@@ -153,57 +147,57 @@
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(assets.background, 0, 0, canvas.width, canvas.height);
     
-    // 플레이어 그리기 변수 설정
     let playerImage;
     let playerX = PL.x, playerY = PL.y, playerW = PL.w, playerH = PL.h;
 
-    // NPC 그리기 변수 설정
     let npcImage = (NPC.state === 'fallen') ? assets.npc_fallen : assets.npc_walking;
     let npcX = NPC.x, npcY = NPC.y, npcW = NPC.w, npcH = NPC.h;
 
-    // 3단계 또는 4단계일 경우 NPC와 플레이어의 위치, 크기, 이미지 재설정
     if (gameState === 'STAGE3_CPR' || gameState === 'STAGE4_AED' || gameState === 'SUCCESS') {
-      npcImage = assets.npc_walking; // 누워있는 포즈 이미지
-      npcX = 630; npcY = 300; npcW = 120; npcH = 100; // NPC 위치/크기 조정
+      npcImage = assets.npc_walking;
+      npcX = 630; npcY = 300; npcW = 120; npcH = 100;
       
-      playerImage = assets.player_cpr; // 플레이어 CPR 포즈 이미지
-      playerX = npcX; playerY = npcY - 50; // 조정된 NPC에 맞춰 플레이어 위치 재조정
-    } else { // 1, 2단계일 경우
+      playerImage = assets.player_cpr;
+      playerX = npcX; playerY = npcY - 30;
+    } else {
       playerImage = (PL.state === 'walk') ? (PL.walkFrame === 0 ? assets.player_walk_1 : assets.player_walk_2) : assets.player_idle;
     }
     
-    // ✨ FIX: 플레이어를 먼저 그리고 NPC를 나중에 그려서 NPC가 위에 오도록 수정
     drawSprite(playerImage, playerX, playerY, playerW, playerH, PL.facing === -1);
     ctx.drawImage(npcImage, npcX, npcY, npcW, npcH);
 
-    // 나머지 UI 그리기
     if (NPC.state === 'fallen' && gameState === 'STAGE1_DISCOVERY') {
-      // ✨ FIX: 깜빡임 효과를 위해 visible 상태에 따라 그림
-      if (exclamation.visible) {
-        ctx.drawImage(assets.exclamation, exclamation.x, exclamation.y, exclamation.w, exclamation.h);
-      }
+        if (exclamation.visible) {
+            ctx.drawImage(assets.exclamation, exclamation.x, exclamation.y, exclamation.w, exclamation.h);
+        }
     }
     if (gameState === 'STAGE2_CALL') {
         ctx.drawImage(assets.phone, canvas.width/2 - 200, canvas.height/2 - 200, 400, 400);
-        ctx.font = "48px 'Press Start 2P'"; ctx.textAlign = 'center';
-        ctx.strokeStyle = '#fff'; ctx.lineWidth = 8;
+        ctx.font = "48px 'Press Start 2P'";
+        ctx.textAlign = 'center';
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 8;
         ctx.strokeText(phoneInput, canvas.width / 2, 200);
-        ctx.fillStyle = '#000'; ctx.fillText(phoneInput, canvas.width / 2, 200);
+        ctx.fillStyle = '#000';
+        ctx.fillText(phoneInput, canvas.width / 2, 200);
     }
     if (gameState === 'STAGE3_CPR') {
         ctx.drawImage(assets.cprBar, cprBarUI.x, cprBarUI.y, cprBarUI.width, cprBarUI.height);
         ctx.drawImage(assets.cprIndicator, cprIndicatorUI.x, cprIndicatorUI.y, cprIndicatorUI.width, cprIndicatorUI.height);
-        ctx.font = "18px 'Press Start 2P'"; ctx.textAlign = 'center';
-        ctx.strokeStyle = '#fff'; ctx.lineWidth = 4;
+        ctx.font = "18px 'Press Start 2P'";
+        ctx.textAlign = 'center';
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 4;
         ctx.strokeText(`압박 성공: ${cprProgress} / ${CPR_TARGET_SUCCESS}`, canvas.width / 2, cprBarUI.y + 85);
-        ctx.fillStyle = '#000'; ctx.fillText(`압박 성공: ${cprProgress} / ${CPR_TARGET_SUCCESS}`, canvas.width / 2, cprBarUI.y + 85);
+        ctx.fillStyle = '#000';
+        ctx.fillText(`압박 성공: ${cprProgress} / ${CPR_TARGET_SUCCESS}`, canvas.width / 2, cprBarUI.y + 85);
     }
     if (gameState === 'STAGE4_AED') {
-        // ✨ FIX: AED 이미지 세로 길이 확대 (이전 수정사항 유지)
         const aedImage = (cprProgress < 1) ? assets.aed_closed : assets.aed_open;
-        ctx.drawImage(aedImage, canvas.width/2 - 125, canvas.height/2 - 125, 200, 300); // 높이 250 -> 300으로 변경
+        ctx.drawImage(aedImage, canvas.width/2 - 125, canvas.height/2 - 150, 250, 300);
     }
   }
+  
   function drawSprite(img, x, y, w, h, flip) {
     ctx.save();
     if (flip) { ctx.scale(-1, 1); ctx.drawImage(img, -x - w, y, w, h); }
