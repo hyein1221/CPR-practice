@@ -8,12 +8,22 @@
 <style>
   :root{
     --navy:#101a3a; --text:#ffffff; --hint:#8fb3ff;
-    --stage-w: 960px; --stage-h: 540px;
   }
   html,body{height:100%;margin:0;background:#0b0f1a;color:var(--text);font-family: "Press Start 2P", system-ui, sans-serif;}
-  .wrap{display:flex;flex-direction:column;align-items:center;gap:10px;padding:14px;position:relative;}
-  .topbar{width:var(--stage-w);background:var(--navy);color:#fff;padding:10px 14px;border-radius:8px;box-shadow:0 6px 18px #0008;font-size:14px; text-align: center;}
-  canvas{width:var(--stage-w);height:var(--stage-h);image-rendering: pixelated;display:block;border-radius:10px;box-shadow:0 10px 32px #000c;border:2px solid #1b274f;}
+  .wrap{display:flex;flex-direction:column;align-items:center;gap:10px;padding:14px;position:relative;width:100%;max-width:960px;margin:0 auto;}
+  .topbar{width:100%;background:var(--navy);color:#fff;padding:10px 14px;border-radius:8px;box-shadow:0 6px 18px #0008;font-size:14px; text-align: center;}
+  
+  /* ✨ FIX: 캔버스가 화면 크기에 맞게 자동으로 조절되도록 수정 */
+  canvas{
+    width: 100%;
+    aspect-ratio: 16 / 9; /* 960x540 비율 유지 */
+    image-rendering: pixelated;
+    display:block;
+    border-radius:10px;
+    box-shadow:0 10px 32px #000c;
+    border:2px solid #1b274f;
+  }
+
   .ui-overlay { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, 0.85); border: 2px solid #fff; padding: 10px 20px; text-align: center; font-size: 16px; color: #fff; text-shadow: 1px 1px #000; display: none; border-radius: 5px; z-index: 10; width: 90%; max-width: 800px;}
   .big-message { font-size: 32px; top: 50%; bottom: auto; transform: translate(-50%, -50%); padding: 20px 30px; }
   footer{margin-top:12px;text-align:center;color:#6b7280;font-size:12px;}
@@ -21,16 +31,18 @@
   /* --- 가상 컨트롤러 스타일 --- */
   #virtual-controls {
     display: none; position: fixed; bottom: 0; left: 0;
-    width: 100%; height: 150px; padding: 20px; box-sizing: border-box;
+    width: 100%; padding: 20px; box-sizing: border-box;
     justify-content: space-between; align-items: center;
-    user-select: none; z-index: 100; pointer-events: none; /* 터치 이벤트만 받도록 */
+    user-select: none; z-index: 100; pointer-events: none;
   }
-  #joystick-pad, #action-button-pad {
-      pointer-events: auto; /* 버튼과 조이스틱은 터치 가능하도록 */
+  /* ✨ FIX: 조이스틱을 D-Pad 버튼으로 교체 */
+  #d-pad { display: flex; align-items: center; gap: 10px; pointer-events: auto; }
+  .d-pad-btn {
+    width: 50px; height: 50px; background: rgba(0,0,0,0.4); border-radius: 50%;
+    display: flex; justify-content: center; align-items: center;
+    font-size: 24px; color: #fff; border: 2px solid rgba(255,255,255,0.5);
   }
-  #joystick-pad { width: 120px; height: 120px; background: rgba(0,0,0,0.3); border-radius: 50%; position: relative; }
-  #joystick-handle { width: 60px; height: 60px; background: rgba(0,0,0,0.5); border-radius: 50%; position: absolute; top: 30px; left: 30px; }
-  #action-button-pad { display: flex; gap: 20px; }
+  #action-button-pad { display: flex; gap: 20px; pointer-events: auto; }
   .v-btn {
     width: 70px; height: 70px; background: rgba(0,0,0,0.4); border-radius: 50%;
     display: flex; justify-content: center; align-items: center;
@@ -51,8 +63,10 @@
 <div id="call-button" class="v-btn">CALL 119</div>
 
 <div id="virtual-controls">
-  <div id="joystick-pad">
-    <div id="joystick-handle"></div>
+  <div id="d-pad">
+    <div id="btn-left" class="d-pad-btn">←</div>
+    <div id="btn-up" class="d-pad-btn">↑</div>
+    <div id="btn-right" class="d-pad-btn">→</div>
   </div>
   <div id="action-button-pad">
     <div id="action-button-b" class="v-btn">Enter</div>
@@ -61,22 +75,20 @@
 </div>
 
 <div class="wrap">
-  <div id="top-bar" class="topbar">1단계: 깨우기- 길에서 쓰러진 사람 발견!</div>
+  <div id="top-bar" class="topbar">1단계: 깨우기</div>
   <canvas id="game-canvas" width="960" height="540"></canvas>
   <div id="instruction-box" class="ui-overlay"></div>
   <div id="big-message-box" class="ui-overlay big-message"></div>
-  <footer>제작자: 질병관리청 국민소통단9기 김혜인 · 문의사항: <a href="mailto:hyein_1221@hanmail.net">hyein_1221@hanmail.net</a></footer>
+  <footer>제작자: 질병관리청 국민소통단9기 김혜인 · 문의: <a href="mailto:hyein_1221@hanmail.net">hyein_1221@hanmail.net</a></footer>
 </div>
 
 <script>
   const canvas = document.getElementById('game-canvas');
   const ctx = canvas.getContext('2d');
   ctx.imageSmoothingEnabled = false;
-
   const topBar = document.getElementById('top-bar');
   const instructionBox = document.getElementById('instruction-box');
   const bigMessageBox = document.getElementById('big-message-box');
-
   let gameState = 'LOADING';
   const keys = {};
 
@@ -145,45 +157,47 @@
   let phoneInput = "";
   const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
+  // ✨ FIX: 조이스틱 로직을 새 버튼 로직으로 교체
   function setupVirtualControls() {
     if (!isTouchDevice) return;
 
-    const callButton = document.getElementById('call-button');
-    const joystick = document.getElementById('joystick-handle');
-    const joystickPad = document.getElementById('joystick-pad');
+    const btnLeft = document.getElementById('btn-left');
+    const btnUp = document.getElementById('btn-up');
+    const btnRight = document.getElementById('btn-right');
     const btnA = document.getElementById('action-button-a');
     const btnB = document.getElementById('action-button-b');
-    let joystickActive = false;
-    let startX;
+    const callButton = document.getElementById('call-button');
 
-    joystickPad.addEventListener('touchstart', (e) => { e.preventDefault(); joystickActive = true; startX = e.touches[0].clientX; }, { passive: false });
-    joystickPad.addEventListener('touchmove', (e) => {
-      e.preventDefault(); if (!joystickActive) return;
-      const deltaX = e.touches[0].clientX - startX;
-      const moveX = Math.max(-30, Math.min(30, deltaX));
-      joystick.style.transform = `translateX(${moveX}px)`;
-      keys['ArrowRight'] = deltaX > 15;
-      keys['ArrowLeft'] = deltaX < -15;
-    }, { passive: false });
-
-    const endTouch = (e) => {
-        e.preventDefault(); joystickActive = false; joystick.style.transform = 'none';
-        keys['ArrowRight'] = false; keys['ArrowLeft'] = false;
+    // 왼쪽/오른쪽 버튼 이벤트
+    const handleMove = (e, key, isPressed) => {
+        e.preventDefault();
+        keys[key] = isPressed;
     };
-    joystickPad.addEventListener('touchend', endTouch);
-    joystickPad.addEventListener('touchcancel', endTouch);
+    btnLeft.addEventListener('touchstart', (e) => handleMove(e, 'ArrowLeft', true), { passive: false });
+    btnLeft.addEventListener('touchend', (e) => handleMove(e, 'ArrowLeft', false));
+    btnRight.addEventListener('touchstart', (e) => handleMove(e, 'ArrowRight', true), { passive: false });
+    btnRight.addEventListener('touchend', (e) => handleMove(e, 'ArrowRight', false));
 
-    btnA.addEventListener('touchstart', (e) => { e.preventDefault(); handleKeyPress({ code: 'Space', key: ' ' }); }, { passive: false });
-    btnB.addEventListener('touchstart', (e) => { e.preventDefault(); handleKeyPress({ code: 'Enter', key: 'Enter' }); }, { passive: false });
-
+    // 위쪽 버튼 (CPR용)
+    btnUp.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if (gameState === 'STAGE3_CPR') {
+            handleKeyPress({ code: 'ArrowUp' });
+        }
+    }, { passive: false });
+    
+    // A/B/Call 버튼
+    btnA.addEventListener('touchstart', (e) => { e.preventDefault(); handleKeyPress({ code: 'Space' }); }, { passive: false });
+    btnB.addEventListener('touchstart', (e) => { e.preventDefault(); handleKeyPress({ code: 'Enter' }); }, { passive: false });
     callButton.addEventListener('touchstart', (e) => {
       e.preventDefault();
       if (gameState === 'STAGE2_CALL') {
         phoneInput = '119';
-        handleKeyPress({ key: '9' }); // 119가 완성되는 마지막 키 입력을 시뮬레이션
+        handleKeyPress({ key: '9' });
       }
     }, { passive: false });
   }
+
 
   window.addEventListener('keydown', e => { keys[e.code] = true; handleKeyPress(e); });
   window.addEventListener('keyup', e => { keys[e.code] = false; });
