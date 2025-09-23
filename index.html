@@ -50,7 +50,7 @@
   }
   #call-button {
     display: none; position: fixed;
-    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    top: 50%; left: 80%; transform: translate(-50%, -50%);
     width: 200px; height: 80px; z-index: 101; font-size: 24px;
     background: #e53935; border-color: #fff; pointer-events: auto;
   }
@@ -143,7 +143,7 @@
   const NPC = { w: 128, h: 128, x: 700, y: 280, state: 'fallen' };
   
   const exclamation = {
-    x: NPC.x + NPC.w / 2 - 16, y: NPC.y - 60,
+    x: NPC.x + NPC.w / 2 - 16, y: NPC.y - 30,
     w: 32, h: 48,
     visible: true, tick: 0, speed: 30
   };
