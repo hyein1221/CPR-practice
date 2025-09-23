@@ -182,10 +182,18 @@ function draw() {
     if (NPC.state === 'fallen' && gameState === 'STAGE1_DISCOVERY') {
       ctx.drawImage(assets.exclamation, NPC.x + NPC.w / 2 - 16, NPC.y - 40, 32, 32);
     }
-    if (gameState === 'STAGE2_CALL') {
+  if (gameState === 'STAGE2_CALL') {
         ctx.drawImage(assets.phone, canvas.width/2 - 200, canvas.height/2 - 200, 400, 400);
-        ctx.fillStyle = '#000'; ctx.font = "48px 'Press Start 2P'"; ctx.textAlign = 'center';
-        ctx.fillText(phoneInput, canvas.width / 2, 200);
+        
+        // ✨ FIX: 텍스트 스타일 수정
+        ctx.font = "48px 'Press Start 2P'";
+        ctx.textAlign = 'center';
+        ctx.strokeStyle = '#fff'; // 테두리 색상 (흰색)
+        ctx.lineWidth = 8;        // 테두리 두께
+        ctx.strokeText(phoneInput, canvas.width / 2, 200); // 테두리 먼저 그리기
+
+        ctx.fillStyle = '#000';  // 글자 색상 (검정색)
+        ctx.fillText(phoneInput, canvas.width / 2, 200);   // 글자 채우기
     }
     if (gameState === 'STAGE3_CPR') {
         ctx.drawImage(assets.cprBar, cprBarUI.x, cprBarUI.y, cprBarUI.width, cprBarUI.height);
