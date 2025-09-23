@@ -167,7 +167,7 @@
       npcX = 630; npcY = 300; npcW = 120; npcH = 100; // NPC 위치/크기 조정
       
       playerImage = assets.player_cpr; // 플레이어 CPR 포즈 이미지
-      playerX = npcX; playerY = npcY - 40; // 조정된 NPC에 맞춰 플레이어 위치 재조정
+      playerX = npcX; playerY = npcY - 50; // 조정된 NPC에 맞춰 플레이어 위치 재조정
     } else { // 1, 2단계일 경우
       playerImage = (PL.state === 'walk') ? (PL.walkFrame === 0 ? assets.player_walk_1 : assets.player_walk_2) : assets.player_idle;
     }
