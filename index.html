@@ -149,25 +149,31 @@ function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(assets.background, 0, 0, canvas.width, canvas.height);
     
-    // ✨ FIX: 플레이어를 먼저 그리도록 순서 변경
-    let playerImage;
-    if (gameState === 'STAGE3_CPR') {
-        playerImage = assets.player_cpr;
-        PL.x = NPC.x - PL.w + 40;
-        PL.y = NPC.y;
-    } else {
-        playerImage = (PL.state === 'walk') ? (PL.walkFrame === 0 ? assets.player_walk_1 : assets.player_walk_2) : assets.player_idle;
-    }
-    drawSprite(playerImage, PL.x, PL.y, PL.w, PL.h, PL.facing === -1);
-    
-    // ✨ FIX: NPC를 나중에 그려서 플레이어 위에 표시되도록 함
+    // NPC 그리기 변수 설정
     let npcImage = (NPC.state === 'fallen') ? assets.npc_fallen : assets.npc_walking;
-    if (gameState === 'STAGE3_CPR' || gameState === 'STAGE4_AED' || gameState === 'SUCCESS') {
-      npcImage = assets.npc_walking;
-    }
-    ctx.drawImage(npcImage, NPC.x, NPC.y, NPC.w, NPC.h);
+    let npcX = NPC.x, npcY = NPC.y, npcW = NPC.w, npcH = NPC.h;
 
-    // 나머지 UI 그리기 (순서 중요)
+    // 플레이어 그리기 변수 설정
+    let playerImage;
+    let playerX = PL.x, playerY = PL.y, playerW = PL.w, playerH = PL.h;
+
+    // 3단계 또는 4단계일 경우 NPC와 플레이어의 위치, 크기, 이미지 재설정
+    if (gameState === 'STAGE3_CPR' || gameState === 'STAGE4_AED' || gameState === 'SUCCESS') {
+      npcImage = assets.npc_walking; // 누워있는 포즈
+      npcX = 630; npcY = 300; npcW = 100; npcH = 100; // NPC 위치/크기 조정
+      
+      playerImage = assets.player_cpr; // 플레이어 CPR 포즈
+      playerX = npcX + 20;  // 조정된 NPC에 맞춰 위치 재조정
+      playerY = npcY - 20;
+    } else { // 1, 2단계일 경우
+      playerImage = (PL.state === 'walk') ? (PL.walkFrame === 0 ? assets.player_walk_1 : assets.player_walk_2) : assets.player_idle;
+    }
+    
+    // 최종적으로 화면에 그리기
+    ctx.drawImage(npcImage, npcX, npcY, npcW, npcH);
+    drawSprite(playerImage, playerX, playerY, playerW, playerH, PL.facing === -1);
+
+    // 나머지 UI 그리기
     if (NPC.state === 'fallen' && gameState === 'STAGE1_DISCOVERY') {
       ctx.drawImage(assets.exclamation, NPC.x + NPC.w / 2 - 16, NPC.y - 40, 32, 32);
     }
@@ -188,7 +194,7 @@ function draw() {
     }
     if (gameState === 'STAGE4_AED') {
         const aedImage = (cprProgress < 1) ? assets.aed_closed : assets.aed_open;
-        ctx.drawImage(aedImage, canvas.width/2 - 100, canvas.height/2 - 100, 200, 200);
+        ctx.drawImage(aedImage, canvas.width/2 - 125, canvas.height/2 - 125, 250, 250);
     }
   }
   function drawSprite(img, x, y, w, h, flip) {
